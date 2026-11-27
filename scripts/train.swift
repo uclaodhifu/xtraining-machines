@@ -1,9 +1,14 @@
 // 用苹果 Create ML 训练（在苹果自带的看图能力上再学一层，模型很小，手机本地跑）
 import CreateML
 import Foundation
-let params = MLImageClassifier.ModelParameters(featureExtractor: .scenePrint(revision: 2), validation: .split(strategy: .automatic), maxIterations: 80, augmentation: [.crop, .exposure, .flip, .rotation, .blur])
-let model = try MLImageClassifier(trainingData: .labeledDirectories(at: URL(fileURLWithPath: "build/train")), parameters: params)
-let ev = model.evaluation(on: .labeledDirectories(at: URL(fileURLWithPath: "build/test")))
+let params = MLImageClassifier.ModelParameters(
+    validation: MLImageClassifier.ModelParameters.ValidationData.split(strategy: .automatic),
+    maxIterations: 80,
+    augmentation: MLImageClassifier.ImageAugmentationOptions([.crop, .exposure, .flip, .rotation, .blur]))
+let trainData = MLImageClassifier.DataSource.labeledDirectories(at: URL(fileURLWithPath: "build/train"))
+let testData = MLImageClassifier.DataSource.labeledDirectories(at: URL(fileURLWithPath: "build/test"))
+let model = try MLImageClassifier(trainingData: trainData, parameters: params)
+let ev = model.evaluation(on: testData)
 let f = { (e: Double) in String(format: "%.1f%%", (1 - e) * 100) }
 let skipped = (try? String(contentsOfFile: "build/skipped.txt", encoding: .utf8)) ?? ""
 var r = "训练时间：\(Date())\n\n"
